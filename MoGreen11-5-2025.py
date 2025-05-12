@@ -1,55 +1,5 @@
 #-*- coding: utf-8 -*-
-#nella versione 28e ho spostato save store da interno alla funzione scrivo dati giornalieri in altri fogli
-#a fuori visto che l'importazione di opepyxle e il caricamento dei fogli è esterno dopo che sono stati aggiornati
-#tutti e 3 i fogli con i dati giornalieri.
-#nella versione 28d ho eliminatolo del tutto il controllo su gSheet del limite accensione lampada inserendo un valore fisso a 700 lux
-#nel tentativo di fare eseguire le foto anche se non si è connessi. 
-#nella cersione 28c ho ripristinato le operazioni di mezzanotte che partono da 00 minuti e finiscono a 7
-#nella versione 28b provo a fare funzionare sriviDatiGiornalieriInAltriFogli
-#nella versione 28a ho cercato di provare per le operazioni che salta alla mezzanotte di togliere min 01 e 02 e arrivare fino a 09
-#nella versione 28 ho ripristinato foglio48 ore
-#Nella versione 27 ho esternalizzato tutte le letture dei sensori e la scrittura di questi in store.
-#Elimino anche i controllo valori rilevati e il riempimento delle righe vuote
-#nella versione 26a ho scritto i print di di tutte le azioni anche se non vengono eseguite a quell'ora
-#ho sostituito tutti i 4 min con 8 minuti 
-#nella versione 26 ho cercato di correggere gli script di lettura del sensore VEML7700 e BME280 per non creare
-#conflitto d'inidirizzi I2C (chiusura smbus dopo la lettura ed intervallo di 1 secondo tra una lettura ed un'altra)
-#nella versione 25 ho introdotto il salvataggio di store giornaliero nella memoria usb
-# vella versione 24 del 7 aprile introduco anche la funzione
-#doOraE8min in quanto i dati giornalieri non vengono aggiornati su gSheet
-#nella versione 23 in caso d'interruzione corrente elettrica vengono iserite righe anche nel foglio ultime48ore
-#e nel foglio datiOrari che da questa versione in poi ho aggiunto a store e gSheet
-#nella versione 22 ho inserito la funzione do8min che userò per le azioni da attuare ogni 30 min
-#nella versione 21 inserisco 2 chunk: 1) in caso d'interruzione di corrente al ripristino
-#inserisce le righe mancanti in store con data corretta ma ripetendo sempre gli stessi valori dell'ultimo rilievo
-#2)il secondo chunk verifica se i valori dei rilievi sono testuali invece che numerici e se sono fuori da un range
-#prestabilito
 
-
-#nella versione 20 cercherò di distinguere meglio gli errori inserendo nel nome del file
-#il punto esatto dove è capitato, per il rilievo dei sensori l'ho già fatto. 
-
-#Nella versione 16 si cerca di suddividere il locale da quello che va su Internet in modo che in caso di disconnessione non ci siano errori
-
-#******* V e r s i o n e   c o n   scrivi48oreStore e scrivi dati giornalieri in altri fogli  funzionanti  *********
-#******* Versione senza il rilievo sensori BS perchÉ perdono l'indirizzo, in attesa di sostituzione e di capire
-#******* La versione 18bsoloBSAddr24 è quella di prova una volta abbassato il clock del I2C da 100KHz a 50 
-#******* La versione 19 è del tutto simile alla 18f ma lo script del sensore luce è stato verificato dal costruttore
-#******* per poter rilevare fino a 120000 lux bisogna usare una frequenza di 25ms e pertanto l'errore può
-#******* essere anche del 20 percento. sarebbe meglio una procedura di calibrazione che non conosco
-#******* nel presente script di VEML7700 c'è la formula di correzione per rilievi maggiori di 100 lx
-#******* In questa versione c'è anche aggiunta righe in caso di interruzione corrente  
-#******* in seguito a test il presente potrebbe essere quello definitivo salvo correzioni input
-#******* che non sono essenziali prima del test in campo, se c'è tempo le aggiuNngo
-
-
-#verifica se il precedente dato è stato 15 minuti prima
-"""
-Se la corrente elettrica va via per parecchio tempo, tipo ore, vorrei che la tabella
-venisse compilata saltando le righe per quanti sono i rilievi mancanti.
-"""
-# A T T E N Z I O N E ! Questo chunk va attaccato prima del rilievo dei sensori,
-#in pratica subito dopo le definizioni di googleSheet
 import traceback
 
 
@@ -224,7 +174,7 @@ def invioFotoSuWeb():
     print("...... attendi qualche secondo che sto inviando ultima.jpg su web")
     #una volta fatta la foto la lancio su web
     import ftplib #importiamo la libreria che useremo per gestire la connessione FTP
-    ftp = ftplib.FTP('rpiplant.altervista.org','rpiplant','aPQq7jNJpWzS') # Si connette
+    ftp = ftplib.FTP('rpiplant.altervista.org','rpiplant','PASSWORD') # Si connette
     fp = open('/home/pi/plant+out/PlantToWeb/ultima.jpg','rb') # Imposta il file da inviare, apriamo uno stream per il file
     #di default siamo nella cartella root del sito / - se vogliamo spostarci in un'altra directory è sufficiente scrivere: ftp.cwd('directory')
     ftp.storbinary('STOR ultima.jpg', fp) # Invia il file 
@@ -928,7 +878,7 @@ def mandaVideoSuWeb():
     ora=ws6['B'+str(ultimaRiga)].value
     print (ora)
 
-    session=ftplib.FTP('rpiplant.altervista.org', 'rpiplant','aPQq7jNJpWzS')
+    session=ftplib.FTP('rpiplant.altervista.org', 'rpiplant','PASSWORD')
     nomefile=dst+"/movie"+ora+".mp4"
     nomefile1="movie"+ora+".mp4"
     print(nomefile)
@@ -1100,7 +1050,7 @@ def sendAlarmBagnaturaSuolo():
             smtpObj= smtplib.SMTP('smtp.gmail.com', 587)
             smtpObj.ehlo()
             smtpObj.starttls()
-            smtpObj.login('rpi.plant.out1@gmail.com', 'apiqwfffbctofcum')
+            smtpObj.login('rpi.plant.out1@gmail.com', 'PASSWORD')
             smtpObj.sendmail('rpi.plant.out1@gmail.com', eMail1, "subject: "+oggetto)
         else:
             print("non ci sono le condizioni per l'invio del messaggio")
@@ -1111,7 +1061,7 @@ def sendAlarmBagnaturaSuolo():
             smtpObj= smtplib.SMTP('smtp.gmail.com', 587)
             smtpObj.ehlo()
             smtpObj.starttls()
-            smtpObj.login('rpi.plant.out1@gmail.com', 'apiqwfffbctofcum')
+            smtpObj.login('rpi.plant.out1@gmail.com', 'PASSWORD')
             smtpObj.sendmail('rpi.plant.out1@gmail.com', eMail2, "subject: "+oggetto)
         else:
             print("non ci sono le condizioni per l'invio del messaggio")       
@@ -1121,7 +1071,7 @@ def sendAlarmBagnaturaSuolo():
             smtpObj= smtplib.SMTP('smtp.gmail.com', 587)
             smtpObj.ehlo()
             smtpObj.starttls()
-            smtpObj.login('rpi.plant.out1@gmail.com', 'apiqwfffbctofcum')
+            smtpObj.login('rpi.plant.out1@gmail.com', 'PASSWORD')
             smtpObj.sendmail('rpi.plant.out1@gmail.com', eMail3, "subject: "+oggetto)
         else:
             print("non ci sono le condizioni per l'invio del messaggio")
@@ -1149,7 +1099,7 @@ def restoreGsheet():
     ws8=wb["datiOrari"]
     from imapclient import IMAPClient
     server = IMAPClient('imap.gmail.com', use_uid=True)
-    server.login('rpi.plant.out1@gmail.com', 'apiqwfffbctofcum')#credenziali di plantOut
+    server.login('rpi.plant.out1@gmail.com', 'PASSWORD')#credenziali di plantOut
 
 
     #così fa il login correttamente
@@ -1204,7 +1154,7 @@ def restoreGsheet():
         import imapclient
         import imaplib
         imapObj=imapclient.IMAPClient("imap.gmail.com", 993)
-        imapObj.login('rpi.plant.out1@gmail.com', 'apiqwfffbctofcum')
+        imapObj.login('rpi.plant.out1@gmail.com', 'PASSWORD')
         imapObj.select_folder('INBOX', readonly=False)
         imapObj.delete_messages(UIDs)
         imapObj.expunge()
@@ -1234,7 +1184,7 @@ def restoreGsheetGiornaliero():
 def rimandaVideoSuWeb():
     from imapclient import IMAPClient
     server = IMAPClient('imap.gmail.com', use_uid=True)
-    server.login('rpi.plant.out1@gmail.com', 'apiqwfffbctofcum')#credenziali di plantOut
+    server.login('rpi.plant.out1@gmail.com', 'PASSWORD')#credenziali di plantOut
 
 
     #così fa il login correttamente
@@ -1274,7 +1224,7 @@ def rimandaVideoSuWeb():
         import imapclient
         import imaplib
         imapObj=imapclient.IMAPClient("imap.gmail.com", 993)
-        imapObj.login('rpi.plant.out1@gmail.com', 'apiqwfffbctofcum')
+        imapObj.login('rpi.plant.out1@gmail.com', 'PASSWORD')
         imapObj.select_folder('INBOX', readonly=False)
         imapObj.delete_messages(UIDs)
         imapObj.expunge()
@@ -1393,7 +1343,7 @@ if check_internet_connection():
     import gspread
     from oauth2client.service_account import ServiceAccountCredentials
     scope =  ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-    credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/plantout1logger-307322-7fff7cda5a13.json', scope)
+    credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/INDIRIZZOLOGGER.json', scope)
     print (credentials)
     gc = gspread.authorize(credentials) 
     #nomino i fogli di GoogleSheet
@@ -1565,7 +1515,7 @@ if check_internet_connection():
             import gspread
             from oauth2client.service_account import ServiceAccountCredentials
             scope =  ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/plantout1logger-307322-7fff7cda5a13.json', scope)
+            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/FILECONCREDENZIALI.json', scope)
             print (credentials)
             gc = gspread.authorize(credentials) 
             #nomino i fogli di GoogleSheet
@@ -1617,7 +1567,7 @@ if check_internet_connection():
             import gspread
             from oauth2client.service_account import ServiceAccountCredentials
             scope =  ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/plantout1logger-307322-7fff7cda5a13.json', scope)
+            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/FILECONCREDENZIALI.json', scope)
             print (credentials)
             gc = gspread.authorize(credentials) 
             #nomino i fogli di GoogleSheet
@@ -1657,7 +1607,7 @@ if check_internet_connection():
             import gspread
             from oauth2client.service_account import ServiceAccountCredentials
             scope =  ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/plantout1logger-307322-7fff7cda5a13.json', scope)
+            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/FILECONCREDENZIALI.json', scope)
             print (credentials)
             gc = gspread.authorize(credentials) 
             #nomino i fogli di GoogleSheet inquanto non definiti in restoreGsheet
@@ -1866,7 +1816,7 @@ if check_internet_connection():
             import gspread
             from oauth2client.service_account import ServiceAccountCredentials
             scope =  ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/plantout1logger-307322-7fff7cda5a13.json', scope)
+            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/FILECONCREDENZIALI.json', scope)
             print (credentials)
             gc = gspread.authorize(credentials) 
             #nomino i fogli di GoogleSheet
@@ -1909,7 +1859,7 @@ if check_internet_connection():
             import gspread
             from oauth2client.service_account import ServiceAccountCredentials
             scope =  ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/plantout1logger-307322-7fff7cda5a13.json', scope)
+            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/FILECONCREDENZIALI.json', scope)
             print (credentials)
             gc = gspread.authorize(credentials) 
             #nomino i fogli di GoogleSheet
@@ -1953,7 +1903,7 @@ if check_internet_connection():
             import gspread
             from oauth2client.service_account import ServiceAccountCredentials
             scope =  ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/plantout1logger-307322-7fff7cda5a13.json', scope)
+            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/FILECONCREDENZIALI.json', scope)
             print (credentials)
             gc = gspread.authorize(credentials) 
             #nomino i fogli di GoogleSheet
@@ -1996,7 +1946,7 @@ if check_internet_connection():
             import gspread
             from oauth2client.service_account import ServiceAccountCredentials
             scope =  ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/plantout1logger-307322-7fff7cda5a13.json', scope)
+            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/FILECONCREDENZIALI.json', scope)
             print (credentials)
             gc = gspread.authorize(credentials) 
             #nomino i fogli di GoogleSheet
@@ -2065,7 +2015,7 @@ if check_internet_connection():
             import gspread
             from oauth2client.service_account import ServiceAccountCredentials
             scope =  ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/plantout1logger-307322-7fff7cda5a13.json', scope)
+            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/FILECONCREDENZIALI.json', scope)
             print (credentials)
             gc = gspread.authorize(credentials)
             wks13 = gc.open("RpiPlantOut1Logger").worksheet('impostazioniPlant+out')
@@ -2138,7 +2088,7 @@ if check_internet_connection():
             import gspread
             from oauth2client.service_account import ServiceAccountCredentials
             scope =  ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/plantout1logger-307322-7fff7cda5a13.json', scope)
+            credentials = ServiceAccountCredentials.from_json_keyfile_name('/home/pi/plant+out/FILECONCREDENZIALI.json', scope)
             print (credentials)
             gc = gspread.authorize(credentials) 
             #nomino i fogli di GoogleSheet
